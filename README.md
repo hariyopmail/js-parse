@@ -52,5 +52,4 @@ $ js-parse -i javascript/ -d site.com -o out.json
 - Extra:
     - [ ] 3rd Party Domains
     - [ ] Variable Names
-    - [ ] Find potential DOM XSS Functions (such as `window.location.hash`)
-    - [ ] Detect Usage of PostMessage 
+    - [X] Detect Usage of PostMessage 

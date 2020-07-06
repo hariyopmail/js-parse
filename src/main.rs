@@ -56,6 +56,7 @@ fn main() {
     let mut parameter: Vec<String> = Vec::with_capacity(0xfff);
     let mut headers: Vec<String> = Vec::with_capacity(0xff);
     let mut api_keys: Vec<String> = Vec::with_capacity(0xff);
+    let mut postmessage = false;
 
     let mut error = false;
 
@@ -137,6 +138,11 @@ fn main() {
                 api_keys.push(key);
             }
         }
+
+        // check for postmessage
+        if helpers::check_postmessage(&content) {
+            postmessage = true;
+        }
     }
 
     if verbosity || error {
@@ -209,6 +215,23 @@ fn main() {
         }
     } else {
         println!("{}", "No API keys were found.".bright_red().bold());
+    }
+
+    // pretty printing
+    println!();
+
+    if postmessage {
+        println!(
+            "{}: {}",
+            "Found postMessage".bright_blue().bold(),
+            "True".bright_green().bold()
+        );
+    } else {
+        println!(
+            "{}: {}",
+            "Found postMessage".bright_blue().bold(),
+            "False".bright_red().bold()
+        );
     }
 
     // create output

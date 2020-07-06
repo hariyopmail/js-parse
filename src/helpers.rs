@@ -116,7 +116,7 @@ pub fn find_subdomains(domain: &str, content: &str) -> Vec<String> {
 pub fn find_parameter(content: &str) -> Vec<String> {
     let mut parameter: Vec<String> = Vec::with_capacity(0xff);
 
-    let re = Regex::new(r"[?&][A-Za-z0-9%,.~*/!_-]+=").unwrap(); // e.g. ?query=
+    let re = Regex::new(r"[?&][A-Za-z0-9~_-]+=").unwrap(); // e.g. ?query=
 
     for param in re.find_iter(content) {
         let mut param = param.as_str().to_string();
@@ -180,4 +180,12 @@ pub fn find_api_keys(content: &str) -> Vec<String> {
         }
     }
     return api_keys;
+}
+
+pub fn check_postmessage(content: &str) -> bool {
+    if content.contains("postMessage(") {
+        return true;
+    }
+
+    return false;
 }
