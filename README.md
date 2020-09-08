@@ -22,28 +22,44 @@ Or download the pre-compiled binary from the [releases page](https://github.com/
 js-parse
 
 USAGE:
-    js-parse [FLAGS] [OPTIONS] --domain <domain> --input <input>
+    js-parse [FLAGS] --domain <domain> --input <input>
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-    -v, --verbose    
+        --endpoints
+    -h, --help          Prints help information
+        --headers
+        --keys
+        --parameters
+        --subdomains
+    -V, --version       Prints version information
+    -v, --verbose
 
 OPTIONS:
-    -d, --domain <domain>    
-    -i, --input <input>      
-    -o, --output <output>    
+    -d, --domain <domain>
+    -i, --input <input>
 ```
 
-Examples:
+## Examples
+
+- Find endpoints
 ```
-$ js-parse -i javascript/ -d site.com -o out.json
+js-parse -d example.com -i javascript/ --endpoints
+```
+
+- Find subdomains
+```
+js-parse -d example.com -i javascript/ --subdomains
+```
+
+- Find parameters
+```
+js-parse -d example.com -i javascript/ --parameters
 ```
 
 ## Features
 
 - Standard:
-    - [X] Subdomains
+    - [x] Subdomains
     - [X] Endpoints
     - [X] Parameter
     - [X] Custom Headers
@@ -52,4 +68,3 @@ $ js-parse -i javascript/ -d site.com -o out.json
 - Extra:
     - [ ] 3rd Party Domains
     - [ ] Variable Names
-    - [X] Detect Usage of PostMessage 

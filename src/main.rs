@@ -1,15 +1,11 @@
 use clap::{App, Arg};
 use colored::*;
-use json;
 use std::fs;
-use std::io::prelude::*;
 use std::process;
 
 mod helpers;
 
 fn main() {
-    // parse command line arguments
-
     let args = App::new("js-parse")
         .arg(
             Arg::with_name("input")
@@ -25,24 +21,31 @@ fn main() {
                 .takes_value(true)
                 .required(true),
         )
-        .arg(
-            Arg::with_name("output")
-                .short("o")
-                .long("output")
-                .takes_value(true),
-        )
+        .arg(Arg::with_name("subdomains").long("subdomains"))
+        .arg(Arg::with_name("endpoints").long("endpoints"))
+        .arg(Arg::with_name("parameters").long("parameters"))
+        .arg(Arg::with_name("headers").long("headers"))
+        .arg(Arg::with_name("keys").long("keys"))
         .arg(Arg::with_name("verbose").short("v").long("verbose"))
         .get_matches();
 
+    if !args.is_present("subdomains")
+        && !args.is_present("endpoints")
+        && !args.is_present("parameters")
+        && !args.is_present("headers")
+        && !args.is_present("keys")
+    {
+        eprintln!(
+            "{} {}",
+            "error:".bright_red().bold(),
+            "Please specify at least one option of what to look for. See -h for help."
+        );
+    }
+
     let input = args.value_of("input").unwrap();
-
     let domain = args.value_of("domain").unwrap();
-
-    let output = args.is_present("output");
-
     let verbosity = args.is_present("verbose");
 
-    // get a list of everything in the input directory
     let files = match fs::read_dir(input) {
         Ok(files) => files,
         Err(err) => {
@@ -53,18 +56,12 @@ fn main() {
 
     let mut subdomains: Vec<String> = Vec::with_capacity(0xfff);
     let mut endpoints: Vec<String> = Vec::with_capacity(0xfff);
-    let mut parameter: Vec<String> = Vec::with_capacity(0xfff);
+    let mut parameters: Vec<String> = Vec::with_capacity(0xfff);
     let mut headers: Vec<String> = Vec::with_capacity(0xff);
     let mut api_keys: Vec<String> = Vec::with_capacity(0xff);
-    let mut postmessage = false;
 
-    let mut error = false;
-
-    // iterate over content of directory
     for file in files {
         let file = file.unwrap();
-
-        // get metadata and check if it is a file
         let md = fs::metadata(file.path()).unwrap();
 
         if !md.is_file() {
@@ -79,191 +76,93 @@ fn main() {
             );
         }
 
-        // read file content
         let content = match fs::read_to_string(file.path()) {
             Ok(content) => content,
             Err(err) => {
                 eprintln!("{} {}", "error:".bright_red().bold(), err);
-                error = true;
                 continue;
             }
         };
 
-        // find subdomains
-        let subs: Vec<String> = helpers::find_subdomains(&domain, &content);
+        if args.is_present("subdomains") {
+            let subs: Vec<String> = helpers::find_subdomains(&domain, &content);
 
-        // iterate over subs and check if it was not found already
-        for sub in subs {
-            if !subdomains.contains(&sub) {
-                subdomains.push(sub);
+            for sub in subs {
+                if !subdomains.contains(&sub) {
+                    subdomains.push(sub);
+                }
             }
         }
 
-        // find endpoints
-        let endps: Vec<String> = helpers::find_endpoints(&domain, &content);
+        if args.is_present("endpoints") {
+            let endps: Vec<String> = helpers::find_endpoints(&domain, &content);
 
-        // iterate over endps and check if it was not found already
-        for endp in endps {
-            if !endpoints.contains(&endp) {
-                endpoints.push(endp);
+            for endp in endps {
+                if !endpoints.contains(&endp) {
+                    endpoints.push(endp);
+                }
             }
         }
 
-        // find parameter
-        let params: Vec<String> = helpers::find_parameter(&content);
+        if args.is_present("parameters") {
+            let params: Vec<String> = helpers::find_parameters(&content);
 
-        // iterate over params and check if it was not found already
-        for param in params {
-            if !parameter.contains(&param) {
-                parameter.push(param);
+            for param in params {
+                if !parameters.contains(&param) {
+                    parameters.push(param);
+                }
             }
         }
 
-        // find header
-        let hs: Vec<String> = helpers::find_header(&content);
+        if args.is_present("headers") {
+            let hs: Vec<String> = helpers::find_header(&content);
 
-        // iterate over hs and check if it was not found already
-        for h in hs {
-            if !headers.contains(&h) {
-                headers.push(h);
+            for h in hs {
+                if !headers.contains(&h) {
+                    headers.push(h);
+                }
             }
         }
 
-        // find api keys
-        let keys: Vec<String> = helpers::find_api_keys(&content);
+        if args.is_present("keys") {
+            let keys: Vec<String> = helpers::find_api_keys(&content);
 
-        // iterate over keys and check if it was not found already
-        for key in keys {
-            if !api_keys.contains(&key) {
-                api_keys.push(key);
+            for key in keys {
+                if !api_keys.contains(&key) {
+                    api_keys.push(key);
+                }
             }
-        }
-
-        // check for postmessage
-        if helpers::check_postmessage(&content) {
-            postmessage = true;
         }
     }
 
-    if verbosity || error {
-        println!();
-    }
-
-    // verify that subdomains were found at all
-    if subdomains.len() > 0 {
-        println!("{}:", "Subdomains".bright_green().bold());
-
+    if args.is_present("subdomains") {
         for sub in &subdomains {
-            println!("\t{}", sub);
+            println!("{}", sub);
         }
-    } else {
-        println!("{}", "No subdomains were found.".bright_red().bold());
     }
 
-    // pretty printing
-    println!();
-
-    // verify that endpoints were found at all
-    if endpoints.len() > 0 {
-        println!("{}:", "Endpoints".bright_green().bold());
-
+    if args.is_present("endpoints") {
         for endpoint in &endpoints {
-            println!("\t{}", endpoint);
+            println!("{}", endpoint);
         }
-    } else {
-        println!("{}", "No endpoints were found.".bright_red().bold());
     }
 
-    // pretty printing
-    println!();
-
-    // verify that parameter were found at all
-    if parameter.len() > 0 {
-        println!("{}:", "Parameter".bright_green().bold());
-
-        for param in &parameter {
-            println!("\t{}", param);
+    if args.is_present("parameters") {
+        for param in &parameters {
+            println!("{}", param);
         }
-    } else {
-        println!("{}", "No parameter were found.".bright_red().bold());
     }
 
-    // pretty printing
-    println!();
-
-    // verify that header were found at all
-    if headers.len() > 0 {
-        println!("{}:", "Custom Headers".bright_green().bold());
-
+    if args.is_present("headers") {
         for header in &headers {
-            println!("\t{}", header);
+            println!("{}", header);
         }
-    } else {
-        println!("{}", "No custom headers were found.".bright_red().bold());
     }
 
-    // pretty printing
-    println!();
-
-    if api_keys.len() > 0 {
-        println!("{}:", "API Keys".bright_green().bold());
-
+    if args.is_present("keys") {
         for key in &api_keys {
             let values: Vec<&str> = key.split("|").collect();
-
-            println!("\t{}: {}", values[0].bright_cyan().bold(), values[1]);
+            println!("{}: {}", values[0].bright_cyan().bold(), values[1]);
         }
-    } else {
-        println!("{}", "No API keys were found.".bright_red().bold());
-    }
-
-    // pretty printing
-    println!();
-
-    if postmessage {
-        println!(
-            "{}: {}",
-            "Found postMessage".bright_blue().bold(),
-            "True".bright_green().bold()
-        );
-    } else {
-        println!(
-            "{}: {}",
-            "Found postMessage".bright_blue().bold(),
-            "False".bright_red().bold()
-        );
-    }
-
-    // create output
-    if output {
-        //pretty printing
-        println!();
-
-        let output_file = args.value_of("output").unwrap();
-
-        let mut output = json::JsonValue::new_object();
-
-        output["subdomains"] = subdomains.into();
-        output["endpoints"] = endpoints.into();
-        output["parameter"] = parameter.into();
-        output["headers"] = headers.into();
-
-        for key in &api_keys {
-            let values: Vec<&str> = key.split("|").collect();
-
-            output["keys"][values[0]] = values[1].into();
-        }
-
-        let mut file = fs::File::create(output_file).unwrap();
-
-        match file.write(output.dump().as_bytes()) {
-            Ok(_ok) => println!(
-                "{}: {} {}",
-                "info".bright_blue().bold(),
-                "saved results in",
-                output_file
-            ),
-            Err(err) => eprintln!("{} {}", "error:".bright_red().bold(), err),
-        };
     }
 }

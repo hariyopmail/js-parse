@@ -7,7 +7,7 @@ pub fn find_endpoints(domain: &str, content: &str) -> Vec<String> {
     let mut endpoints: Vec<String> = Vec::with_capacity(0xff);
 
     // more or less ugly regex since rust doesn't support some features
-    let re = Regex::new("=[ ]?['\"]/[a-zA-Z0-9.!_:-][a-zA-Z0-9.!_:/-]+[;\"'#?]").unwrap(); // e.g. ="/some/relative/url.php"
+    let re = Regex::new("[=+][ ]?['\"]/[a-zA-Z0-9.!_:-][a-zA-Z0-9.!_:/-]+[;\"'#?]").unwrap(); // e.g. ="/some/relative/url.php"
 
     for endpoint in re.find_iter(content) {
         let mut endpoint = endpoint.as_str().to_string();
@@ -113,8 +113,8 @@ pub fn find_subdomains(domain: &str, content: &str) -> Vec<String> {
     return subdomains;
 }
 
-pub fn find_parameter(content: &str) -> Vec<String> {
-    let mut parameter: Vec<String> = Vec::with_capacity(0xff);
+pub fn find_parameters(content: &str) -> Vec<String> {
+    let mut parameters: Vec<String> = Vec::with_capacity(0xff);
 
     let re = Regex::new(r"[?&][A-Za-z0-9~_-]+=").unwrap(); // e.g. ?query=
 
@@ -125,11 +125,11 @@ pub fn find_parameter(content: &str) -> Vec<String> {
         param.pop();
         param.remove(0);
 
-        if !parameter.contains(&param) {
-            parameter.push(param);
+        if !parameters.contains(&param) {
+            parameters.push(param);
         }
     }
-    return parameter;
+    return parameters;
 }
 
 pub fn find_header(content: &str) -> Vec<String> {
@@ -152,11 +152,11 @@ pub fn find_api_keys(content: &str) -> Vec<String> {
 
     let keys_json = json::parse(
         r#"
-    
+
     {
         "Artifactory Token":    "AKC[a-zA-Z0-9]{10,}",
         "Artifactory Password": "AP[0-9A-F][a-zA-Z0-9]{8,}",
-        "Mailchamp API Key":    "[0-9a-f]{32}-us[0-9]{1,2}",
+        "MailChimp API Key":    "[0-9a-f]{32}-us[0-9]{1,2}",
         "Mailgun API Key":      "key-[0-9a-zA-Z]{32}",
         "Picatic API Key":      "sk_live_[0-9a-z]{32}",
         "Slack Token":          "xox[baprs]-[0-9a-zA-Z]{10,48}",
@@ -180,12 +180,4 @@ pub fn find_api_keys(content: &str) -> Vec<String> {
         }
     }
     return api_keys;
-}
-
-pub fn check_postmessage(content: &str) -> bool {
-    if content.contains("postMessage(") {
-        return true;
-    }
-
-    return false;
 }
