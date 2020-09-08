@@ -22,7 +22,7 @@ Or download the pre-compiled binary from the [releases page](https://github.com/
 js-parse
 
 USAGE:
-    js-parse [FLAGS] --domain <domain> --input <input>
+    js-parse [FLAGS] [OPTIONS] --domain <domain> --input <input>
 
 FLAGS:
         --endpoints
@@ -37,6 +37,7 @@ FLAGS:
 OPTIONS:
     -d, --domain <domain>
     -i, --input <input>
+    -o, --output <output>
 ```
 
 ## Examples
