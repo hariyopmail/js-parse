@@ -7,15 +7,21 @@ pub fn find_endpoints(domain: &str, content: &str) -> Vec<String> {
     let mut endpoints: Vec<String> = Vec::with_capacity(0xff);
 
     // more or less ugly regex since rust doesn't support some features
-    let re = Regex::new("[=+][ ]?['\"]/[a-zA-Z0-9.!_:-][a-zA-Z0-9.!_:/-]+[;\"'#?]").unwrap(); // e.g. ="/some/relative/url.php"
+    let re = Regex::new("[=+][ ]*['\"]/[a-zA-Z0-9.!_:-][a-zA-Z0-9.!_:/-]+[;\"'#?]").unwrap(); // e.g. ="/some/relative/url.php"
 
     for endpoint in re.find_iter(content) {
         let mut endpoint = endpoint.as_str().to_string();
 
-        // remove leading and trailing not-part-of-the-path characters
-        endpoint.pop();
-        endpoint.remove(0);
-        endpoint.remove(0);
+        // remove not-part-of-the-path characters
+        endpoint = endpoint
+            .replace("\"", "")
+            .replace("'", "")
+            .replace(" ", "")
+            .replace("+", "")
+            .replace("=", "")
+            .replace("#", "")
+            .replace("?", "")
+            .replace(";", "");
 
         if !endpoints.contains(&endpoint) {
             endpoints.push(endpoint);
