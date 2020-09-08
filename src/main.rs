@@ -29,6 +29,7 @@ fn main() {
                 .long("output")
                 .takes_value(true),
         )
+        .arg(Arg::with_name("all").long("all"))
         .arg(Arg::with_name("subdomains").long("subdomains"))
         .arg(Arg::with_name("endpoints").long("endpoints"))
         .arg(Arg::with_name("parameters").long("parameters"))
@@ -37,23 +38,21 @@ fn main() {
         .arg(Arg::with_name("verbose").short("v").long("verbose"))
         .get_matches();
 
+    let input = args.value_of("input").unwrap();
+    let domain = args.value_of("domain").unwrap();
+    let output = args.is_present("output");
+    let verbosity = args.is_present("verbose");
+    let mut all = args.is_present("all");
+
+
     if !args.is_present("subdomains")
         && !args.is_present("endpoints")
         && !args.is_present("parameters")
         && !args.is_present("headers")
         && !args.is_present("keys")
     {
-        eprintln!(
-            "{} {}",
-            "error:".bright_red().bold(),
-            "Please specify at least one option of what to look for. See -h for help."
-        );
+        all = true
     }
-
-    let input = args.value_of("input").unwrap();
-    let domain = args.value_of("domain").unwrap();
-    let output = args.is_present("output");
-    let verbosity = args.is_present("verbose");
 
     let files = match fs::read_dir(input) {
         Ok(files) => files,
@@ -93,7 +92,7 @@ fn main() {
             }
         };
 
-        if args.is_present("subdomains") {
+        if args.is_present("subdomains") || all {
             let subs: Vec<String> = helpers::find_subdomains(&domain, &content);
 
             for sub in subs {
@@ -103,7 +102,7 @@ fn main() {
             }
         }
 
-        if args.is_present("endpoints") {
+        if args.is_present("endpoints") || all {
             let endps: Vec<String> = helpers::find_endpoints(&domain, &content);
 
             for endp in endps {
@@ -113,7 +112,7 @@ fn main() {
             }
         }
 
-        if args.is_present("parameters") {
+        if args.is_present("parameters") || all {
             let params: Vec<String> = helpers::find_parameters(&content);
 
             for param in params {
@@ -123,7 +122,7 @@ fn main() {
             }
         }
 
-        if args.is_present("headers") {
+        if args.is_present("headers") || all {
             let hs: Vec<String> = helpers::find_header(&content);
 
             for h in hs {
@@ -133,7 +132,7 @@ fn main() {
             }
         }
 
-        if args.is_present("keys") {
+        if args.is_present("keys") || all {
             let keys: Vec<String> = helpers::find_api_keys(&content);
 
             for key in keys {
@@ -144,34 +143,85 @@ fn main() {
         }
     }
 
-    if args.is_present("subdomains") {
+    if args.is_present("subdomains") || all {
+        if all {
+            println!("{}:", "Subdomains".bright_green().bold());
+        }
         for sub in &subdomains {
-            println!("{}", sub);
+            if all {
+                println!("\t{}", sub);
+            } else {
+                println!("{}", sub);
+            }
         }
     }
 
-    if args.is_present("endpoints") {
+    if all {
+        println!();
+    }
+
+    if args.is_present("endpoints") || all {
+        if all {
+            println!("{}:", "Endpoints".bright_green().bold());
+        }
         for endpoint in &endpoints {
-            println!("{}", endpoint);
+            if all {
+                println!("\t{}", endpoint);
+            } else {
+                println!("{}", endpoint);
+            }
         }
     }
 
-    if args.is_present("parameters") {
+    if all {
+        println!();
+    }
+
+    if args.is_present("parameters") || all {
+        if all {
+            println!("{}:", "Parameters".bright_green().bold());
+        }
         for param in &parameters {
-            println!("{}", param);
+            if all {
+                println!("\t{}", param);
+            } else {
+                println!("{}", param);
+            }
         }
     }
 
-    if args.is_present("headers") {
+    if all {
+        println!();
+    }
+
+    if args.is_present("headers") || all {
+        if all {
+            println!("{}:", "Headers".bright_green().bold());
+        }
         for header in &headers {
-            println!("{}", header);
+            if all {
+                println!("\t{}", header);
+            } else {
+                println!("{}", header);
+            }
         }
     }
 
-    if args.is_present("keys") {
+    if all {
+        println!();
+    }
+
+    if args.is_present("keys") || all {
+        if all {
+            println!("{}:", "API Keys".bright_green().bold());
+        }
         for key in &api_keys {
             let values: Vec<&str> = key.split("|").collect();
-            println!("{}: {}", values[0].bright_cyan().bold(), values[1]);
+            if all {
+                println!("\t{}: {}", values[0].bright_cyan().bold(), values[1]);
+            } else {
+                println!("{}: {}", values[0].bright_cyan().bold(), values[1]);
+            }
         }
     }
 

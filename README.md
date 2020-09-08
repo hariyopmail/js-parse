@@ -25,6 +25,7 @@ USAGE:
     js-parse [FLAGS] [OPTIONS] --domain <domain> --input <input>
 
 FLAGS:
+        --all
         --endpoints
     -h, --help          Prints help information
         --headers
@@ -41,6 +42,11 @@ OPTIONS:
 ```
 
 ## Examples
+
+- Find everything (default):
+```
+js-parse -d example.com -i javascript/
+```
 
 - Find endpoints
 ```
@@ -62,7 +68,7 @@ js-parse -d example.com -i javascript/ --parameters
 - Standard:
     - [x] Subdomains
     - [X] Endpoints
-    - [X] Parameter
+    - [X] Parameters
     - [X] Custom Headers
     - [X] API Keys
 
