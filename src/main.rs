@@ -1,6 +1,8 @@
 use clap::{App, Arg};
 use colored::*;
+use json;
 use std::fs;
+use std::io::prelude::*;
 use std::process;
 
 mod helpers;
@@ -20,6 +22,12 @@ fn main() {
                 .long("domain")
                 .takes_value(true)
                 .required(true),
+        )
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .long("output")
+                .takes_value(true),
         )
         .arg(Arg::with_name("subdomains").long("subdomains"))
         .arg(Arg::with_name("endpoints").long("endpoints"))
@@ -44,6 +52,7 @@ fn main() {
 
     let input = args.value_of("input").unwrap();
     let domain = args.value_of("domain").unwrap();
+    let output = args.is_present("output");
     let verbosity = args.is_present("verbose");
 
     let files = match fs::read_dir(input) {
@@ -164,5 +173,33 @@ fn main() {
             let values: Vec<&str> = key.split("|").collect();
             println!("{}: {}", values[0].bright_cyan().bold(), values[1]);
         }
+    }
+
+    if output {
+        let output_file = args.value_of("output").unwrap();
+
+        let mut output = json::JsonValue::new_object();
+
+        output["subdomains"] = subdomains.into();
+        output["endpoints"] = endpoints.into();
+        output["parameter"] = parameters.into();
+        output["headers"] = headers.into();
+
+        for key in &api_keys {
+            let values: Vec<&str> = key.split("|").collect();
+            output["keys"][values[0]] = values[1].into();
+        }
+
+        let mut file = fs::File::create(output_file).unwrap();
+
+        match file.write(output.dump().as_bytes()) {
+            Ok(_ok) => println!(
+                "{}: {} {}",
+                "info".bright_blue().bold(),
+                "saved results in",
+                output_file
+            ),
+            Err(err) => eprintln!("{} {}", "error:".bright_red().bold(), err),
+        };
     }
 }
