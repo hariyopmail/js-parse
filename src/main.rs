@@ -84,13 +84,23 @@ fn main() {
             );
         }
 
-        let content = match fs::read_to_string(file.path()) {
-            Ok(content) => content,
+        let mut file = match fs::File::open(file.path()) {
+            Ok(file) => file,
             Err(err) => {
                 eprintln!("{} {}", "error:".bright_red().bold(), err);
                 continue;
             }
         };
+
+        let mut buf = vec![];
+        match file.read_to_end(&mut buf) {
+            Ok(_ok) => _ok,
+            Err(err) => {
+                eprintln!("{} {}", "error:".bright_red().bold(), err);
+                continue;
+            }
+        };
+        let content = String::from_utf8_lossy(&buf);
 
         if args.is_present("subdomains") || all {
             let subs: Vec<String> = helpers::find_subdomains(&domain, &content);
