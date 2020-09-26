@@ -44,7 +44,6 @@ fn main() {
     let verbosity = args.is_present("verbose");
     let mut all = args.is_present("all");
 
-
     if !args.is_present("subdomains")
         && !args.is_present("endpoints")
         && !args.is_present("parameters")
@@ -54,13 +53,30 @@ fn main() {
         all = true
     }
 
-    let files = match fs::read_dir(input) {
-        Ok(files) => files,
+    let md = match fs::metadata(input) {
+        Ok(md) => md,
         Err(err) => {
             eprintln!("{} {}", "error:".bright_red().bold(), err);
             process::exit(-1);
         }
     };
+    let mut files = Vec::new();
+
+    if md.is_dir() {
+        let dir_files = match fs::read_dir(input) {
+            Ok(dir_files) => dir_files,
+            Err(err) => {
+                eprintln!("{} {}", "error:".bright_red().bold(), err);
+                process::exit(-1);
+            }
+        };
+        for f in dir_files {
+            let f = f.unwrap().path().to_str().unwrap().to_string();
+            files.push(f);
+        }
+    } else {
+        files.push(input.to_string());
+    }
 
     let mut subdomains: Vec<String> = Vec::with_capacity(0xfff);
     let mut endpoints: Vec<String> = Vec::with_capacity(0xfff);
@@ -69,22 +85,18 @@ fn main() {
     let mut api_keys: Vec<String> = Vec::with_capacity(0xff);
 
     for file in files {
-        let file = file.unwrap();
-        let md = fs::metadata(file.path()).unwrap();
+        let file = file.as_str();
+        let md = fs::metadata(file).unwrap();
 
         if !md.is_file() {
             continue;
         }
 
         if verbosity {
-            println!(
-                "{} scanning {}...",
-                "info:".bright_blue().bold(),
-                file.path().to_string_lossy()
-            );
+            println!("{} scanning {}...", "info:".bright_blue().bold(), file);
         }
 
-        let mut file = match fs::File::open(file.path()) {
+        let mut f = match fs::File::open(file) {
             Ok(file) => file,
             Err(err) => {
                 eprintln!("{} {}", "error:".bright_red().bold(), err);
@@ -93,7 +105,7 @@ fn main() {
         };
 
         let mut buf = vec![];
-        match file.read_to_end(&mut buf) {
+        match f.read_to_end(&mut buf) {
             Ok(_ok) => _ok,
             Err(err) => {
                 eprintln!("{} {}", "error:".bright_red().bold(), err);

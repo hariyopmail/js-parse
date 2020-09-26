@@ -43,6 +43,8 @@ OPTIONS:
 
 ## Examples
 
+> **You can either provide a file or a directory as input**
+
 - Find everything (default):
 ```
 js-parse -d example.com -i javascript/
